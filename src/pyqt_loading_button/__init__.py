@@ -1,1 +1,1 @@
-from .loading_button import LoadingButton
+from .loading_button import LoadingButton, AnimationType
