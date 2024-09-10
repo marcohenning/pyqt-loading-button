@@ -1,3 +1,4 @@
+import math
 from qtpy.QtCore import QTimeLine, QEasingCurve, Qt
 from qtpy.QtGui import QPainter, QPen, QColor
 from qtpy.QtWidgets import QPushButton
@@ -13,15 +14,20 @@ class LoadingButton(QPushButton):
         self.__action = None
         self.__running = False
 
-        self.__circle_rotation_speed = 2000
-        self.__circle_span_speed = 700
+        self.__animation_speed = 1500
+        self.__animation_width = 13
+        self.__animation_thickness = 3
+        self.__animation_color = QColor(0, 0, 0)
+
+        self.__circle_speed_coefficient = 0.35
+        self.__circle_span_speed = int(self.__animation_speed * self.__circle_speed_coefficient)
         self.__circle_minimum_span = 30
         self.__circle_maximum_span = 280
         self.__circle_span = self.__circle_maximum_span
-        self.__circle_additional_span = 0
-        self.__circle_previous_additional_span = 0
+        self.__circle_additional_rotation = 0
+        self.__circle_previous_additional_rotation = 0
 
-        self.__timeline_circle_rotation = QTimeLine(self.__circle_rotation_speed, self)
+        self.__timeline_circle_rotation = QTimeLine(self.__animation_speed, self)
         self.__timeline_circle_rotation.setFrameRange(360, 0)
         self.__timeline_circle_rotation.setLoopCount(0)
         self.__timeline_circle_rotation.setEasingCurve(QEasingCurve.Type.Linear)
@@ -64,11 +70,11 @@ class LoadingButton(QPushButton):
 
     def __handle_timeline_circle_increase_span(self):
         self.__circle_span = self.__timeline_circle_increase_span.currentFrame()
-        self.__circle_additional_span = self.__timeline_circle_increase_span.currentFrame() - self.__circle_minimum_span
+        self.__circle_additional_rotation = self.__timeline_circle_increase_span.currentFrame() - self.__circle_minimum_span
         self.update()
 
     def __handle_timeline_circle_increase_span_start(self):
-        self.__circle_previous_additional_span = (self.__circle_previous_additional_span + self.__circle_additional_span) % 360
+        self.__circle_previous_additional_rotation = (self.__circle_previous_additional_rotation + self.__circle_additional_rotation) % 360
         self.__timeline_circle_increase_span.start()
 
     def paintEvent(self, event):
@@ -78,11 +84,13 @@ class LoadingButton(QPushButton):
 
             painter = QPainter(self)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-            painter.setPen(QPen(QColor(0, 0, 0), 3, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            painter.setPen(QPen(self.__animation_color, self.__animation_thickness, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
 
-            rotation = (self.__timeline_circle_rotation.currentFrame() - self.__circle_additional_span - self.__circle_previous_additional_span) % 360 * 16
+            x = math.floor((self.width() - self.__animation_width) / 2)
+            y = math.ceil((self.height() - self.__animation_width) / 2)
+            rotation = (self.__timeline_circle_rotation.currentFrame() - self.__circle_additional_rotation - self.__circle_previous_additional_rotation) % 360 * 16
             span = self.__circle_span * 16
-            painter.drawArc(10, 7, 15, 15, rotation, span)
+            painter.drawArc(x, y, self.__animation_width, self.__animation_width, rotation, span)
 
     def text(self) -> str:
         return self.__text
