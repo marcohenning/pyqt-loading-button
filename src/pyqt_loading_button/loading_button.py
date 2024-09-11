@@ -15,12 +15,14 @@ class LoadingButton(QPushButton):
         self.__action = None
         self.__running = False
 
-        self.__animation_type = AnimationType.Circle
-        self.__animation_speed = 1500
-        self.__animation_width = 13
-        self.__animation_thickness = 3
+        # Animation settings
+        self.__animation_type = AnimationType.Dots
+        self.__animation_speed = 1000
+        self.__animation_width = 20
+        self.__animation_thickness = 4
         self.__animation_color = QColor(0, 0, 0)
 
+        # Animation settings (Circle)
         self.__circle_speed_coefficient = 0.35
         self.__circle_span_speed = int(self.__animation_speed * self.__circle_speed_coefficient)
         self.__circle_minimum_span = 30
@@ -29,6 +31,14 @@ class LoadingButton(QPushButton):
         self.__circle_additional_rotation = 0
         self.__circle_previous_additional_rotation = 0
 
+        # Animation settings (Dots)
+        self.__dots_speed_coefficient = 0.3
+        self.__dots_single_speed = int(self.__animation_speed * self.__dots_speed_coefficient)
+        self.__dots_offset_1 = 0
+        self.__dots_offset_2 = 0
+        self.__dots_offset_3 = 0
+
+        # Animation timelines (Circle)
         self.__timeline_circle_rotation = QTimeLine(self.__animation_speed, self)
         self.__timeline_circle_rotation.setFrameRange(360, 0)
         self.__timeline_circle_rotation.setLoopCount(0)
@@ -47,6 +57,41 @@ class LoadingButton(QPushButton):
         self.__timeline_circle_increase_span.frameChanged.connect(self.__handle_timeline_circle_increase_span)
         self.__timeline_circle_increase_span.finished.connect(self.__timeline_circle_decrease_span.start)
 
+        # Animation timelines (Dots)
+        self.__timeline_dots_up_1 = QTimeLine(self.__dots_single_speed, self)
+        self.__timeline_dots_up_1.setFrameRange(0, self.__animation_thickness)
+        self.__timeline_dots_up_1.setEasingCurve(QEasingCurve.Type.InOutSine)
+        self.__timeline_dots_up_1.frameChanged.connect(self.__handle_timeline_dots_up_1)
+
+        self.__timeline_dots_down_1 = QTimeLine(self.__dots_single_speed, self)
+        self.__timeline_dots_down_1.setFrameRange(self.__animation_thickness, 0)
+        self.__timeline_dots_down_1.setEasingCurve(QEasingCurve.Type.InOutSine)
+        self.__timeline_dots_down_1.frameChanged.connect(self.__handle_timeline_dots_down_1)
+        self.__timeline_dots_up_1.finished.connect(self.__timeline_dots_down_1.start)
+
+        self.__timeline_dots_up_2 = QTimeLine(self.__dots_single_speed, self)
+        self.__timeline_dots_up_2.setFrameRange(0, self.__animation_thickness)
+        self.__timeline_dots_up_2.setEasingCurve(QEasingCurve.Type.InOutSine)
+        self.__timeline_dots_up_2.frameChanged.connect(self.__handle_timeline_dots_up_2)
+
+        self.__timeline_dots_down_2 = QTimeLine(self.__dots_single_speed, self)
+        self.__timeline_dots_down_2.setFrameRange(self.__animation_thickness, 0)
+        self.__timeline_dots_down_2.setEasingCurve(QEasingCurve.Type.InOutSine)
+        self.__timeline_dots_down_2.frameChanged.connect(self.__handle_timeline_dots_down_2)
+        self.__timeline_dots_up_2.finished.connect(self.__timeline_dots_down_2.start)
+
+        self.__timeline_dots_up_3 = QTimeLine(self.__dots_single_speed, self)
+        self.__timeline_dots_up_3.setFrameRange(0, self.__animation_thickness)
+        self.__timeline_dots_up_3.setEasingCurve(QEasingCurve.Type.InOutSine)
+        self.__timeline_dots_up_3.frameChanged.connect(self.__handle_timeline_dots_up_3)
+
+        self.__timeline_dots_down_3 = QTimeLine(self.__dots_single_speed, self)
+        self.__timeline_dots_down_3.setFrameRange(self.__animation_thickness, 0)
+        self.__timeline_dots_down_3.setEasingCurve(QEasingCurve.Type.InOutSine)
+        self.__timeline_dots_down_3.frameChanged.connect(self.__handle_timeline_dots_down_3)
+        self.__timeline_dots_down_3.finished.connect(self.__timeline_dots_up_1.start)
+        self.__timeline_dots_up_3.finished.connect(self.__timeline_dots_down_3.start)
+
         self.clicked.connect(self.__start_action)
 
     def __start_action(self):
@@ -56,20 +101,27 @@ class LoadingButton(QPushButton):
             self.worker = Worker(self.__action)
             self.worker.finished.connect(self.__end_action)
             self.worker.start()
-
-            if self.__animation_type == AnimationType.Circle:
-                self.__timeline_circle_rotation.start()
-                self.__timeline_circle_decrease_span.start()
-
-            elif self.__animation_type == AnimationType.Dots:
-                pass
+            self.__timeline_circle_rotation.start()
+            self.__timeline_circle_decrease_span.start()
+            self.__timeline_dots_up_1.start()
+            self.update()
 
     def __end_action(self):
         super().setText(self.__text)
+
         self.__timeline_circle_rotation.stop()
         self.__timeline_circle_decrease_span.stop()
         self.__timeline_circle_increase_span.stop()
+
+        self.__timeline_dots_up_1.stop()
+        self.__timeline_dots_down_1.stop()
+        self.__timeline_dots_up_2.stop()
+        self.__timeline_dots_down_2.stop()
+        self.__timeline_dots_up_3.stop()
+        self.__timeline_dots_down_3.stop()
+
         self.__running = False
+        self.update()
 
     def __handle_timeline_circle_decrease_span(self):
         self.__circle_span = self.__timeline_circle_decrease_span.currentFrame()
@@ -84,6 +136,34 @@ class LoadingButton(QPushButton):
         self.__circle_previous_additional_rotation = (self.__circle_previous_additional_rotation + self.__circle_additional_rotation) % 360
         self.__timeline_circle_increase_span.start()
 
+    def __handle_timeline_dots_up_1(self, value):
+        self.__dots_offset_1 = self.__timeline_dots_up_1.currentFrame()
+        if value > 0.75 and self.__timeline_dots_up_2.state() == QTimeLine.State.NotRunning:
+            self.__timeline_dots_up_2.start()
+        self.update()
+
+    def __handle_timeline_dots_down_1(self):
+        self.__dots_offset_1 = self.__timeline_dots_down_1.currentFrame()
+        self.update()
+
+    def __handle_timeline_dots_up_2(self, value):
+        self.__dots_offset_2 = self.__timeline_dots_up_2.currentFrame()
+        if value > 0.75 and self.__timeline_dots_up_3.state() == QTimeLine.State.NotRunning:
+            self.__timeline_dots_up_3.start()
+        self.update()
+
+    def __handle_timeline_dots_down_2(self):
+        self.__dots_offset_2 = self.__timeline_dots_down_2.currentFrame()
+        self.update()
+
+    def __handle_timeline_dots_up_3(self):
+        self.__dots_offset_3 = self.__timeline_dots_up_3.currentFrame()
+        self.update()
+
+    def __handle_timeline_dots_down_3(self):
+        self.__dots_offset_3 = self.__timeline_dots_down_3.currentFrame()
+        self.update()
+
     def paintEvent(self, event):
         super().paintEvent(event)
 
@@ -93,14 +173,29 @@ class LoadingButton(QPushButton):
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
             painter.setPen(QPen(self.__animation_color, self.__animation_thickness, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
 
-            x = math.floor((self.width() - self.__animation_width) / 2)
-            y = math.ceil((self.height() - self.__animation_width) / 2)
+            diameter = self.__animation_width - self.__animation_thickness
+            x = math.floor((self.width() - diameter) / 2)
+            y = math.ceil((self.height() - diameter) / 2)
             rotation = (self.__timeline_circle_rotation.currentFrame() - self.__circle_additional_rotation - self.__circle_previous_additional_rotation) % 360 * 16
             span = self.__circle_span * 16
-            painter.drawArc(x, y, self.__animation_width, self.__animation_width, rotation, span)
+
+            painter.drawArc(x, y, diameter, diameter, rotation, span)
 
         elif self.__running and self.__animation_type == AnimationType.Dots:
-            pass
+
+            painter = QPainter(self)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            painter.setBrush(self.__animation_color)
+
+            true_width = math.ceil(self.__animation_width / 3) * 2 + self.__animation_thickness
+            x_dot_1 = math.ceil((self.width() - true_width) / 2)
+            x_dot_2 = x_dot_1 + math.ceil(self.__animation_width / 3)
+            x_dot_3 = x_dot_2 + math.ceil(self.__animation_width / 3)
+            y = math.ceil((self.height() - self.__animation_thickness) / 2)
+
+            painter.drawEllipse(x_dot_1, y - self.__dots_offset_1, self.__animation_thickness, self.__animation_thickness)
+            painter.drawEllipse(x_dot_2, y - self.__dots_offset_2, self.__animation_thickness, self.__animation_thickness)
+            painter.drawEllipse(x_dot_3, y - self.__dots_offset_3, self.__animation_thickness, self.__animation_thickness)
 
     def text(self) -> str:
         return self.__text
