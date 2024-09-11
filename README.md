@@ -8,11 +8,11 @@
 
 A QPushButton with built-in loading animations for PyQt and PySide.
 
-gif
+![Main](https://github.com/user-attachments/assets/e4142cd2-9618-498e-a4c1-a2000239b0c9)
 
 ## About
 
-The widget functions exactly like PyQt's regular QPushButton with the only exception being the way methods are connected to the clicked event. Normally you would connect a method to the `clicked` event by using the `connect()` method. On this button you use the `setAction()` method instead, passing a callable object as its parameter the same way you would do with the `connect()` method. The method will then get executed in a `QThread`, allowing the button to display a loading animation.
+The widget functions exactly like PyQt's regular `QPushButton` with the only exception being the way methods are connected to the `clicked` event. Normally you would connect a method to the `clicked` event by using the `connect()` method. On this button you use the `setAction()` method instead, passing a callable object as its parameter the same way you would do with the `connect()` method. The method will then get executed in a `QThread`, allowing the button to display a loading animation.
 
 ## Installation
 
