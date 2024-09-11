@@ -5,7 +5,7 @@ class Worker(QThread):
 
     finished = Signal()
 
-    def __init__(self, action):
+    def __init__(self, action: callable):
         super(Worker, self).__init__()
 
         self.__action = action
