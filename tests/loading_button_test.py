@@ -22,6 +22,8 @@ def test_initial_values(qtbot):
 
 
 def test_set_text(qtbot):
+    """Test setting the button text"""
+
     loading_button = LoadingButton()
     qtbot.addWidget(loading_button)
 
@@ -30,6 +32,8 @@ def test_set_text(qtbot):
 
 
 def test_set_animation_type(qtbot):
+    """Test setting the animation type"""
+
     loading_button = LoadingButton()
     qtbot.addWidget(loading_button)
 
@@ -38,6 +42,8 @@ def test_set_animation_type(qtbot):
 
 
 def test_set_animation_speed(qtbot):
+    """Test setting the animation speed"""
+
     loading_button = LoadingButton()
     qtbot.addWidget(loading_button)
 
@@ -46,6 +52,8 @@ def test_set_animation_speed(qtbot):
 
 
 def test_set_animation_width(qtbot):
+    """Test setting the animation width"""
+
     loading_button = LoadingButton()
     qtbot.addWidget(loading_button)
 
@@ -54,6 +62,8 @@ def test_set_animation_width(qtbot):
 
 
 def test_set_animation_stroke_width(qtbot):
+    """Test setting the animation stroke width"""
+
     loading_button = LoadingButton()
     qtbot.addWidget(loading_button)
 
@@ -61,7 +71,9 @@ def test_set_animation_stroke_width(qtbot):
     assert loading_button.getAnimationStrokeWidth() == 5
 
 
-def test_setAnimationColor(qtbot):
+def test_set_animation_color(qtbot):
+    """Test setting the animation color"""
+
     loading_button = LoadingButton()
     qtbot.addWidget(loading_button)
 
@@ -71,6 +83,8 @@ def test_setAnimationColor(qtbot):
 
 
 def test_click_event_circle(qtbot):
+    """Test the click event for the circular animation"""
+
     loading_button = LoadingButton()
     qtbot.addWidget(loading_button)
 
@@ -94,6 +108,8 @@ def test_click_event_circle(qtbot):
 
 
 def test_click_event_dots(qtbot):
+    """Test the click event for the dotted animation"""
+
     loading_button = LoadingButton()
     qtbot.addWidget(loading_button)
 

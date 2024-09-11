@@ -1,5 +1,5 @@
 import math
-from qtpy.QtCore import QTimeLine, QEasingCurve, Qt
+from qtpy.QtCore import QTimeLine, QEasingCurve, Qt, Signal
 from qtpy.QtGui import QPainter, QPen, QColor
 from qtpy.QtWidgets import QPushButton
 from .worker import Worker
@@ -8,9 +8,18 @@ from .animation_type import AnimationType
 
 class LoadingButton(QPushButton):
 
+    # Event
+    finished = Signal()
+
     def __init__(self, parent=None):
+        """Create a new LoadingButton instance
+
+        :param parent: the parent widget
+        """
+
         super(LoadingButton, self).__init__(parent)
 
+        # LoadingButton attributes
         self.__text = ''
         self.__action = None
         self.__running = False
@@ -93,9 +102,13 @@ class LoadingButton(QPushButton):
         self.__timeline_dots_down_3.finished.connect(self.__timeline_dots_up_1.start)
         self.__timeline_dots_up_3.finished.connect(self.__timeline_dots_down_3.start)
 
+        # Execute __start_action() every time the button is clicked
         self.clicked.connect(self.__start_action)
 
     def __start_action(self):
+        """Handles the button being clicked.
+        Executes the connected method if not running already and starts the animation."""
+
         if self.__action and not self.__running:
             self.__running = True
             super().setText('')
@@ -108,6 +121,9 @@ class LoadingButton(QPushButton):
             self.update()
 
     def __end_action(self):
+        """Called once the executed method is finished.
+        Handles stopping the animation and showing text again."""
+
         super().setText(self.__text)
 
         self.__timeline_circle_rotation.stop()
@@ -122,53 +138,78 @@ class LoadingButton(QPushButton):
         self.__timeline_dots_down_3.stop()
 
         self.__running = False
+        self.finished.emit()
         self.update()
 
     def __handle_timeline_circle_decrease_span(self):
+        """Handles timeline for decreasing the circle span"""
+
         self.__circle_span = self.__timeline_circle_decrease_span.currentFrame()
         self.update()
 
     def __handle_timeline_circle_increase_span(self):
+        """Handles timeline for increasing the circle span"""
+
         self.__circle_span = self.__timeline_circle_increase_span.currentFrame()
         self.__circle_additional_rotation = self.__timeline_circle_increase_span.currentFrame() - self.__circle_minimum_span
         self.update()
 
     def __handle_timeline_circle_increase_span_start(self):
+        """Handles starting the timeline for increasing the circle span"""
+
         self.__circle_previous_additional_rotation = (self.__circle_previous_additional_rotation +
                                                       self.__circle_additional_rotation) % 360
         self.__timeline_circle_increase_span.start()
 
     def __handle_timeline_dots_up_1(self, value):
+        """Handles timeline for moving the first dot upwards"""
+
         self.__dots_offset_1 = self.__timeline_dots_up_1.currentFrame()
         if value > 0.75 and self.__timeline_dots_up_2.state() == QTimeLine.State.NotRunning:
             self.__timeline_dots_up_2.start()
         self.update()
 
     def __handle_timeline_dots_down_1(self):
+        """Handles timeline for moving the first dot downwards"""
+
         self.__dots_offset_1 = self.__timeline_dots_down_1.currentFrame()
         self.update()
 
     def __handle_timeline_dots_up_2(self, value):
+        """Handles timeline for moving the second dot upwards"""
+
         self.__dots_offset_2 = self.__timeline_dots_up_2.currentFrame()
         if value > 0.75 and self.__timeline_dots_up_3.state() == QTimeLine.State.NotRunning:
             self.__timeline_dots_up_3.start()
         self.update()
 
     def __handle_timeline_dots_down_2(self):
+        """Handles timeline for moving the second dot downwards"""
+
         self.__dots_offset_2 = self.__timeline_dots_down_2.currentFrame()
         self.update()
 
     def __handle_timeline_dots_up_3(self):
+        """Handles timeline for moving the third dot upwards"""
+
         self.__dots_offset_3 = self.__timeline_dots_up_3.currentFrame()
         self.update()
 
     def __handle_timeline_dots_down_3(self):
+        """Handles timeline for moving the third dot downwards"""
+
         self.__dots_offset_3 = self.__timeline_dots_down_3.currentFrame()
         self.update()
 
     def paintEvent(self, event):
+        """Method that gets called every time the widget needs to be updated.
+
+        :param event: event sent by PyQt
+        """
+
         super().paintEvent(event)
 
+        # Handle circle
         if self.__running and self.__animation_type == AnimationType.Circle:
 
             painter = QPainter(self)
@@ -186,6 +227,7 @@ class LoadingButton(QPushButton):
 
             painter.drawArc(x, y, diameter, diameter, rotation, span)
 
+        # Handle dots
         elif self.__running and self.__animation_type == AnimationType.Dots:
 
             painter = QPainter(self)
@@ -206,29 +248,69 @@ class LoadingButton(QPushButton):
                                 self.__animation_stroke_width, self.__animation_stroke_width)
 
     def text(self) -> str:
+        """Get the current button text
+
+        :return: button text
+        """
+
         return self.__text
 
-    def setText(self, text: str) -> None:
+    def setText(self, text: str):
+        """Set the button text
+
+        :param text: new button text
+        """
+
         self.__text = text
         if not self.__running:
             super().setText(self.__text)
 
     def setAction(self, action: callable):
+        """Set the action to be executed on button press
+
+        :param action: new action to be executed on button press
+        """
+
         self.__action = action
 
     def isRunning(self) -> bool:
+        """Get whether the button's action is currently being executed
+
+        :return: Whether the button's action is currently being executed
+        """
+
         return self.__running
 
     def getAnimationType(self) -> AnimationType:
+        """Get the current animation type
+
+        :return: animation type
+        """
+
         return self.__animation_type
 
     def setAnimationType(self, animation_type: AnimationType):
+        """Set the animation type
+
+        :param animation_type: new animation type
+        """
+
         self.__animation_type = animation_type
 
     def getAnimationSpeed(self) -> int:
+        """Get the current animation speed (in ms)
+
+        :return: animation speed (in ms)
+        """
+
         return self.__animation_speed
 
     def setAnimationSpeed(self, speed: int):
+        """Set the animation speed (in ms)
+
+        :param speed: new animation speed (in ms)
+        """
+
         self.__animation_speed = speed
 
         self.__circle_span_speed = int(self.__animation_speed * self.__circle_speed_coefficient)
@@ -246,19 +328,49 @@ class LoadingButton(QPushButton):
         self.__timeline_dots_down_3.setDuration(self.__dots_single_speed)
 
     def getAnimationWidth(self) -> int:
+        """Get the current animation width
+
+        :return: animation width
+        """
+
         return self.__animation_width
 
     def setAnimationWidth(self, width: int):
+        """Set the animation width
+
+        :param width: new animation width
+        """
+
         self.__animation_width = width
 
     def getAnimationStrokeWidth(self) -> int:
+        """Get the current animation stroke width
+
+        :return: animation stroke width
+        """
+
         return self.__animation_stroke_width
 
     def setAnimationStrokeWidth(self, width: int):
+        """Set the animation stroke width
+
+        :param width: new animation stroke width
+        """
+
         self.__animation_stroke_width = width
 
     def getAnimationColor(self) -> QColor:
+        """Get the current animation color
+
+        :return: animation color
+        """
+
         return self.__animation_color
 
     def setAnimationColor(self, color: QColor):
+        """Set the animation color
+
+        :param color: new animation color
+        """
+
         self.__animation_color = color
